@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>АІС «Склад та продаж автотоварів»</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    :root {
+      --primary-navy: #000d6b;
+      --bg-page: #f6f8fb;
+    }
+    body {
+      background-color: var(--bg-page);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #333;
+    }
+    .top-navbar {
+      background-color: var(--primary-navy);
+      padding: 0.75rem 2rem;
+    }
+    .brand-logo-sq {
+      background-color: #ffd000;
+      color: #000d6b;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+    }
+    .user-avatar-circle {
+      background-color: #e2e8f0;
+      color: #000d6b;
+      font-weight: 700;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+    }
+    .chip-btn {
+      border: none;
+      background-color: #e9ecef;
+      color: #495057;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .chip-btn.active, .chip-btn:hover {
+      background-color: #ffd000;
+      color: #212529;
+    }
+    .main-table-card {
+      background: #ffffff;
+      border-radius: 14px;
+      border: 1px solid #edf0f5;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+    .main-table thead th {
+      background-color: #ffffff;
+      color: #8c98a4;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid #edf0f5;
+    }
+    .main-table tbody td {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid #f2f4f8;
+      font-size: 0.9rem;
+      vertical-align: middle;
+    }
+    .category-tag {
+      background-color: #e7f1ff;
+      color: #0c63e4;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 12px;
+      display: inline-block;
+    }
+    .stock-tag {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .stock-ok { background-color: #e6f7ec; color: #198754; }
+    .stock-low { background-color: #fdeced; color: #dc3545; }
+    .stock-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .stock-ok .stock-dot { background-color: #198754; }
+    .stock-low .stock-dot { background-color: #dc3545; }
+    
+    .btn-action-edit {
+      background-color: #fef7e6;
+      color: #f59e0b;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-action-delete {
+      background-color: #fdeced;
+      color: #dc3545;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Верхня навігація -->
+  <nav class="top-navbar text-white d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center gap-2">
+      <div class="brand-logo-sq">
+        <i class="bi bi-car-front-fill"></i>
+      </div>
+      <span class="fw-bold fs-5">Автомобільні товари</span>
+    </div>
+
+    <!-- Блок профілю користувача / гостя -->
+    <div class="d-flex align-items-center gap-3">
+      <div id="guestProfileBlock" class="d-flex align-items-center gap-2">
+        <span class="badge bg-light text-dark px-3 py-2 rounded-pill">Режим: Клієнт</span>
+        <button class="btn btn-outline-warning btn-sm" onclick="showLoginModal()">
+          <i class="bi bi-box-arrow-in-right me-1"></i>Кабінет працівника
+        </button>
+      </div>
+
+      <div id="operatorProfileBlock" class="d-none align-items-center gap-2">
+        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">Склад / Оператор</span>
+        <span class="small fw-semibold ms-2" id="userNameLabel">Влада Гунченко</span>
+        <div class="user-avatar-circle" id="userAvatarLabel">ВГ</div>
+        <button class="btn btn-outline-light btn-sm ms-2" onclick="logout()" title="Вийти">
+          <i class="bi bi-box-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid px-4 py-4" style="max-width: 1400px;">
+    <!-- Заголовок та кнопка створення -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <h2 class="fw-bold mb-1" id="sectionHeading">Каталог продукції</h2>
+        <div class="text-secondary small" id="sectionSubHeading">Перегляд цін, наявності та оформлення замовлення</div>
+      </div>
+      <div id="adminActionButtons" class="d-none">
+        <button class="btn btn-primary px-3 py-2 fw-semibold d-flex align-items-center gap-2" style="border-radius: 10px;" onclick="openAddModal()">
+          <i class="bi bi-plus-lg"></i> Додати товар
+        </button>
+      </div>
+    </div>
+
+    <!-- Пошук та фільтри -->
+    <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
+      <div class="input-group" style="max-width: 320px;">
+        <span class="input-group-text bg-white border-end-0 text-muted" style="border-radius: 10px 0 0 10px;"><i class="bi bi-search"></i></span>
+        <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Пошук (MN7902, 5W-40, Elite)..." style="border-radius: 0 10px 10px 0;" oninput="filterData()">
+      </div>
+
+      <div class="d-flex gap-2">
+        <button class="chip-btn active" onclick="selectChip('ALL', this)">Всі товари</button>
+        <button class="chip-btn" onclick="selectChip('Синтетичні моторні оливи', this)">Моторні оливи</button>
+      </div>
+    </div>
+
+    <!-- Таблиця товарів -->
+    <div class="main-table-card">
+      <div class="table-responsive">
+        <table class="table main-table mb-0">
+          <thead>
+            <tr>
+              <th style="width: 100px;">ID</th>
+              <th style="width: 140px;">АРТИКУЛ</th>
+              <th>НАЗВА ТОВАРУ</th>
+              <th style="width: 220px;">КАТЕГОРІЯ</th>
+              <th style="width: 140px;">ЦІНА (ГРН)</th>
+              <th style="width: 180px;" id="thQuantity">НАЯВНІСТЬ</th>
+              <th style="width: 120px;" class="text-end">ДІЇ</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="7" class="text-center py-4 text-muted">Завантаження каталогу з бази...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center px-4 py-3 border-top">
+        <div class="text-secondary small" id="recordCounter">Показано 0 товарів</div>
+        <div class="small text-muted" id="modeNotice">Режим перегляду каталогу</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальне вікно входу для працівника -->
+  <div class="modal fade" id="loginModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="border-radius: 14px;">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold">Вхід у кабінет оператора</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted small">Введіть облікові дані співробітника складу для доступу до управління товарами.</p>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Логін</label>
+            <input type="text" id="loginUsername" class="form-control" value="operator1">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Пароль</label>
+            <input type="password" id="loginPassword" class="form-control" value="admin123">
+          </div>
+          <div id="loginError" class="alert alert-danger d-none py-2 small"></div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+          <button type="button" class="btn btn-primary px-4" onclick="handleLogin()">Увійти</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    let allProducts = [];
+    let selectedCategory = 'ALL';
+    let currentUser = null;
+    let loginModalInstance = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loginModalInstance = new bootstrap.Modal(document.getElementById('loginModal'));
+      fetchProducts();
+    });
+
+    async function fetchProducts() {
+      try {
+        const res = await fetch('/api/products');
+        allProducts = await res.json();
+        renderTable(allProducts);
+      } catch (err) {
+        document.getElementById('tableBody').innerHTML =
+          `<tr><td colspan="7" class="text-center py-4 text-danger">Не вдалося завантажити дані з сервера</td></tr>`;
+      }
+    }
+
+    function renderTable(items) {
+      const tbody = document.getElementById('tableBody');
+      const counter = document.getElementById('recordCounter');
+      counter.innerText = `Показано ${items.length} із ${allProducts.length} позицій`;
+
+      if (items.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">Товарів не знайдено</td></tr>`;
+        return;
+      }
+
+      const isStaff = currentUser !== null;
+
+      tbody.innerHTML = items.map(p => {
+        const idFormatted = String(p.product_id).padStart(6, '0');
+        const formattedPrice = Number(p.price).toLocaleString('uk-UA', { minimumFractionDigits: 2 });
+        const isLow = p.stock_quantity <= 15;
+
+        // Відображення наявності залежно від ролі
+        let quantityHtml = '';
+        if (isStaff) {
+          quantityHtml = `
+            <span class="stock-tag ${isLow ? 'stock-low' : 'stock-ok'}">
+              <span class="stock-dot"></span> ${p.stock_quantity} шт (склад)
+            </span>
+          `;
+        } else {
+          quantityHtml = p.stock_quantity > 0
+            ? `<span class="stock-tag stock-ok"><span class="stock-dot"></span> В наявності</span>`
+            : `<span class="stock-tag stock-low"><span class="stock-dot"></span> Закінчився</span>`;
+        }
+
+        // Відображення дій залежно від ролі
+        let actionsHtml = '';
+        if (isStaff) {
+          actionsHtml = `
+            <button class="btn-action-edit me-1" title="Редагувати ціну/залишок" onclick="alert('Редагування товару ID: ${p.product_id}')">
+              <i class="bi bi-pencil-fill"></i>
+            </button>
+            <button class="btn-action-delete" title="Списати товар" onclick="alert('Списання товару ID: ${p.product_id}')">
+              <i class="bi bi-trash-fill"></i>
+            </button>
+          `;
+        } else {
+          actionsHtml = `
+            <button class="btn btn-primary btn-sm rounded-pill px-3" onclick="alert('«${p.name}» додано у ваше замовлення!')">
+              <i class="bi bi-cart-plus me-1"></i>Купити
+            </button>
+          `;
+        }
+
+        return `
+          <tr>
+            <td class="text-secondary small font-monospace">${idFormatted}</td>
+            <td class="fw-bold">${p.article}</td>
+            <td class="fw-medium">${p.name}</td>
+            <td><span class="category-tag">${p.category_name || 'Оливи'}</span></td>
+            <td class="fw-semibold">${formattedPrice}</td>
+            <td>${quantityHtml}</td>
+            <td class="text-end">${actionsHtml}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterData() {
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = allProducts.filter(p => {
+        const matchesSearch = p.name.toLowerCase().includes(search) || p.article.toLowerCase().includes(search);
+        const matchesCategory = selectedCategory === 'ALL' || (p.category_name && p.category_name.includes(selectedCategory));
+        return matchesSearch && matchesCategory;
+      });
+      renderTable(filtered);
+    }
+
+    function selectChip(cat, btn) {
+      selectedCategory = cat;
+      document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      filterData();
+    }
+
+    function showLoginModal() {
+      document.getElementById('loginError').classList.add('d-none');
+      loginModalInstance.show();
+    }
+
+    async function handleLogin() {
+      const username = document.getElementById('loginUsername').value.trim();
+      const password = document.getElementById('loginPassword').value.trim();
+      const errBox = document.getElementById('loginError');
+
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          currentUser = data.user;
+          loginModalInstance.hide();
+          applyUserMode();
+        } else {
+          errBox.textContent = data.message || 'Невірні дані';
+          errBox.classList.remove('d-none');
+        }
+      } catch (e) {
+        errBox.textContent = 'Помилка підключення до сервера';
+        errBox.classList.remove('d-none');
+      }
+    }
+
+    function applyUserMode() {
+      document.getElementById('guestProfileBlock').classList.add('d-none');
+      document.getElementById('operatorProfileBlock').classList.remove('d-none');
+      document.getElementById('operatorProfileBlock').classList.add('d-flex');
+
+      document.getElementById('userNameLabel').textContent = currentUser.full_name;
+      document.getElementById('userAvatarLabel').textContent = currentUser.full_name.split(' ').map(n => n[0]).join('');
+      
+      document.getElementById('adminActionButtons').classList.remove('d-none');
+      document.getElementById('sectionHeading').textContent = 'Товар';
+      document.getElementById('sectionSubHeading').textContent = 'Управління товарами, залишками та цінами на складі';
+      document.getElementById('thQuantity').textContent = 'КІЛЬКІСТЬ НА СКЛАДІ';
+      document.getElementById('modeNotice').textContent = 'Режим: Адміністрування складу (Оператор)';
+
+      renderTable(allProducts);
+    }
+
+    function logout() {
+      currentUser = null;
+      document.getElementById('guestProfileBlock').classList.remove('d-none');
+      document.getElementById('operatorProfileBlock').classList.add('d-none');
+      document.getElementById('operatorProfileBlock').classList.remove('d-flex');
+
+      document.getElementById('adminActionButtons').classList.add('d-none');
+      document.getElementById('sectionHeading').textContent = 'Каталог продукції';
+      document.getElementById('sectionSubHeading').textContent = 'Перегляд цін, наявності та оформлення замовлення';
+      document.getElementById('thQuantity').textContent = 'НАЯВНІСТЬ';
+      document.getElementById('modeNotice').textContent = 'Режим: Клієнтський перегляд';
+
+      renderTable(allProducts);
+    }
+
+    function openAddModal() {
+      alert('Форма додавання нового товару в базу даних');
+    }
+  </script>
+</body>
+</html>
