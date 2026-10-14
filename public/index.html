@@ -114,6 +114,7 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      cursor: pointer;
     }
     .btn-action-delete {
       background-color: #fdeced;
@@ -125,6 +126,11 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      cursor: pointer;
+    }
+    .cart-badge {
+      font-size: 0.75rem;
+      vertical-align: middle;
     }
   </style>
 </head>
@@ -141,13 +147,19 @@
 
     <!-- Блок профілю користувача / гостя -->
     <div class="d-flex align-items-center gap-3">
+      <!-- Клієнтська зона -->
       <div id="guestProfileBlock" class="d-flex align-items-center gap-2">
+        <button class="btn btn-warning btn-sm fw-semibold position-relative me-2" onclick="openCartModal()">
+          <i class="bi bi-cart3 me-1"></i>Кошик
+          <span id="cartCountBadge" class="badge bg-danger rounded-pill cart-badge ms-1">0</span>
+        </button>
         <span class="badge bg-light text-dark px-3 py-2 rounded-pill">Режим: Клієнт</span>
         <button class="btn btn-outline-warning btn-sm" onclick="showLoginModal()">
           <i class="bi bi-box-arrow-in-right me-1"></i>Кабінет працівника
         </button>
       </div>
 
+      <!-- Зона оператора -->
       <div id="operatorProfileBlock" class="d-none align-items-center gap-2">
         <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">Склад / Оператор</span>
         <span class="small fw-semibold ms-2" id="userNameLabel">Влада Гунченко</span>
@@ -177,12 +189,14 @@
     <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
       <div class="input-group" style="max-width: 320px;">
         <span class="input-group-text bg-white border-end-0 text-muted" style="border-radius: 10px 0 0 10px;"><i class="bi bi-search"></i></span>
-        <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Пошук (MN7902, 5W-40, Elite)..." style="border-radius: 0 10px 10px 0;" oninput="filterData()">
+        <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Пошук (MN7902, 5W-40, W712)..." style="border-radius: 0 10px 10px 0;" oninput="filterData()">
       </div>
 
-      <div class="d-flex gap-2">
+      <div class="d-flex flex-wrap gap-2">
         <button class="chip-btn active" onclick="selectChip('ALL', this)">Всі товари</button>
         <button class="chip-btn" onclick="selectChip('Синтетичні моторні оливи', this)">Моторні оливи</button>
+        <button class="chip-btn" onclick="selectChip('Фільтри', this)">Фільтри</button>
+        <button class="chip-btn" onclick="selectChip('Технічні рідини', this)">Технічні рідини</button>
       </div>
     </div>
 
@@ -210,6 +224,50 @@
       <div class="d-flex justify-content-between align-items-center px-4 py-3 border-top">
         <div class="text-secondary small" id="recordCounter">Показано 0 товарів</div>
         <div class="small text-muted" id="modeNotice">Режим перегляду каталогу</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальне вікно КОШИКА ПОКУПЦЯ -->
+  <div class="modal fade" id="cartModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content" style="border-radius: 14px;">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold"><i class="bi bi-cart3 text-warning me-2"></i>Кошик замовлення</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="cartEmptyMessage" class="text-center py-4 text-muted">
+            <i class="bi bi-cart-x fs-1 d-block mb-2 text-secondary"></i>
+            Ваш кошик поки що порожній. Додайте товари з каталогу!
+          </div>
+          <div id="cartTableWrapper" class="d-none">
+            <div class="table-responsive">
+              <table class="table align-middle">
+                <thead>
+                  <tr class="text-secondary small">
+                    <th>Товар</th>
+                    <th style="width: 120px;">Ціна</th>
+                    <th style="width: 140px;" class="text-center">Кількість</th>
+                    <th style="width: 120px;" class="text-end">Сума</th>
+                    <th style="width: 50px;"></th>
+                  </tr>
+                </thead>
+                <tbody id="cartTableBody"></tbody>
+              </table>
+            </div>
+            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded-3 mt-3">
+              <span class="fw-semibold">Загальна вартість:</span>
+              <span class="fs-5 fw-bold text-primary" id="cartTotalSum">0,00 грн</span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Продовжити вибір</button>
+          <button type="button" id="btnCheckout" class="btn btn-success px-4" onclick="checkoutOrder()" disabled>
+            <i class="bi bi-check-circle me-1"></i>Оформити замовлення
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -242,23 +300,124 @@
     </div>
   </div>
 
+  <!-- Модальне вікно додавання товару оператором -->
+  <div class="modal fade" id="addProductModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="border-radius: 14px;">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold">Додати новий товар на склад</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="addProductForm">
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Артикул</label>
+              <input type="text" id="addArticle" class="form-control" placeholder="напр. MN7910-4" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Назва товару</label>
+              <input type="text" id="addName" class="form-control" placeholder="напр. Mannol Legend Extra 0W-30" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Категорія</label>
+              <select id="addCategory" class="form-select" required></select>
+            </div>
+            <div class="row">
+              <div class="col-6 mb-3">
+                <label class="form-label small fw-semibold">Ціна (грн)</label>
+                <input type="number" step="0.01" id="addPrice" class="form-control" placeholder="1150.00" required>
+              </div>
+              <div class="col-6 mb-3">
+                <label class="form-label small fw-semibold">Кількість на складі</label>
+                <input type="number" id="addStock" class="form-control" placeholder="15" required>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Короткий опис / Специфікація</label>
+              <input type="text" id="addDescription" class="form-control" placeholder="API SN, ACEA C2/C3">
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+          <button type="button" class="btn btn-primary px-4" onclick="submitNewProduct()">Додати товар</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальне вікно редагування -->
+  <div class="modal fade" id="editProductModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="border-radius: 14px;">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold">Редагування залишків та ціни</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="editProductId">
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Товар</label>
+            <input type="text" id="editProductName" class="form-control bg-light" readonly>
+          </div>
+          <div class="row">
+            <div class="col-6 mb-3">
+              <label class="form-label small fw-semibold">Ціна (грн)</label>
+              <input type="number" step="0.01" id="editProductPrice" class="form-control" required>
+            </div>
+            <div class="col-6 mb-3">
+              <label class="form-label small fw-semibold">Кількість на складі</label>
+              <input type="number" id="editProductStock" class="form-control" required>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+          <button type="button" class="btn btn-primary px-4" onclick="saveProductEdit()">Зберегти зміни</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     let allProducts = [];
+    let categoriesList = [];
     let selectedCategory = 'ALL';
     let currentUser = null;
+    let cart = []; // Кошик покупця
+
     let loginModalInstance = null;
+    let addProductModalInstance = null;
+    let editProductModalInstance = null;
+    let cartModalInstance = null;
 
     document.addEventListener('DOMContentLoaded', () => {
       loginModalInstance = new bootstrap.Modal(document.getElementById('loginModal'));
+      addProductModalInstance = new bootstrap.Modal(document.getElementById('addProductModal'));
+      editProductModalInstance = new bootstrap.Modal(document.getElementById('editProductModal'));
+      cartModalInstance = new bootstrap.Modal(document.getElementById('cartModal'));
+      
+      loadCategories();
       fetchProducts();
     });
+
+    async function loadCategories() {
+      try {
+        const res = await fetch('/api/categories');
+        categoriesList = await res.json();
+        const select = document.getElementById('addCategory');
+        select.innerHTML = categoriesList.map(c => `<option value="${c.category_id}">${c.name}</option>`).join('');
+      } catch (err) {
+        console.error('Помилка завантаження категорій:', err);
+      }
+    }
 
     async function fetchProducts() {
       try {
         const res = await fetch('/api/products');
         allProducts = await res.json();
-        renderTable(allProducts);
+        filterData();
       } catch (err) {
         document.getElementById('tableBody').innerHTML =
           `<tr><td colspan="7" class="text-center py-4 text-danger">Не вдалося завантажити дані з сервера</td></tr>`;
@@ -282,7 +441,6 @@
         const formattedPrice = Number(p.price).toLocaleString('uk-UA', { minimumFractionDigits: 2 });
         const isLow = p.stock_quantity <= 15;
 
-        // Відображення наявності залежно від ролі
         let quantityHtml = '';
         if (isStaff) {
           quantityHtml = `
@@ -296,20 +454,19 @@
             : `<span class="stock-tag stock-low"><span class="stock-dot"></span> Закінчився</span>`;
         }
 
-        // Відображення дій залежно від ролі
         let actionsHtml = '';
         if (isStaff) {
           actionsHtml = `
-            <button class="btn-action-edit me-1" title="Редагувати ціну/залишок" onclick="alert('Редагування товару ID: ${p.product_id}')">
+            <button class="btn-action-edit me-1" title="Редагувати ціну/залишок" onclick="openEditModal(${p.product_id})">
               <i class="bi bi-pencil-fill"></i>
             </button>
-            <button class="btn-action-delete" title="Списати товар" onclick="alert('Списання товару ID: ${p.product_id}')">
+            <button class="btn-action-delete" title="Списати товар" onclick="deleteProduct(${p.product_id}, '${p.name}')">
               <i class="bi bi-trash-fill"></i>
             </button>
           `;
         } else {
           actionsHtml = `
-            <button class="btn btn-primary btn-sm rounded-pill px-3" onclick="alert('«${p.name}» додано у ваше замовлення!')">
+            <button class="btn btn-primary btn-sm rounded-pill px-3" onclick="addToCart(${p.product_id})" ${p.stock_quantity <= 0 ? 'disabled' : ''}>
               <i class="bi bi-cart-plus me-1"></i>Купити
             </button>
           `;
@@ -320,7 +477,7 @@
             <td class="text-secondary small font-monospace">${idFormatted}</td>
             <td class="fw-bold">${p.article}</td>
             <td class="fw-medium">${p.name}</td>
-            <td><span class="category-tag">${p.category_name || 'Оливи'}</span></td>
+            <td><span class="category-tag">${p.category_name || 'Автотовари'}</span></td>
             <td class="fw-semibold">${formattedPrice}</td>
             <td>${quantityHtml}</td>
             <td class="text-end">${actionsHtml}</td>
@@ -333,7 +490,7 @@
       const search = document.getElementById('searchInput').value.toLowerCase();
       const filtered = allProducts.filter(p => {
         const matchesSearch = p.name.toLowerCase().includes(search) || p.article.toLowerCase().includes(search);
-        const matchesCategory = selectedCategory === 'ALL' || (p.category_name && p.category_name.includes(selectedCategory));
+        const matchesCategory = selectedCategory === 'ALL' || (p.category_name && p.category_name.toLowerCase().includes(selectedCategory.toLowerCase()));
         return matchesSearch && matchesCategory;
       });
       renderTable(filtered);
@@ -346,6 +503,123 @@
       filterData();
     }
 
+    /* ЛОГІКА КОШИКА ПОКУПЦЯ */
+    function addToCart(productId) {
+      const product = allProducts.find(p => p.product_id === productId);
+      if (!product) return;
+
+      const itemInCart = cart.find(item => item.product_id === productId);
+      if (itemInCart) {
+        if (itemInCart.count < product.stock_quantity) {
+          itemInCart.count++;
+        } else {
+          alert('На жаль, на складі більше немає вільних одиниць цього товару.');
+          return;
+        }
+      } else {
+        cart.push({
+          product_id: product.product_id,
+          name: product.name,
+          article: product.article,
+          price: Number(product.price),
+          count: 1,
+          maxStock: product.stock_quantity
+        });
+      }
+      updateCartBadge();
+    }
+
+    function updateCartBadge() {
+      const totalCount = cart.reduce((sum, item) => sum + item.count, 0);
+      document.getElementById('cartCountBadge').textContent = totalCount;
+    }
+
+    function openCartModal() {
+      renderCartModal();
+      cartModalInstance.show();
+    }
+
+    function renderCartModal() {
+      const emptyMsg = document.getElementById('cartEmptyMessage');
+      const tableWrapper = document.getElementById('cartTableWrapper');
+      const tbody = document.getElementById('cartTableBody');
+      const totalSumEl = document.getElementById('cartTotalSum');
+      const btnCheckout = document.getElementById('btnCheckout');
+
+      if (cart.length === 0) {
+        emptyMsg.classList.remove('d-none');
+        tableWrapper.classList.add('d-none');
+        btnCheckout.disabled = true;
+        return;
+      }
+
+      emptyMsg.classList.add('d-none');
+      tableWrapper.classList.remove('d-none');
+      btnCheckout.disabled = false;
+
+      let total = 0;
+      tbody.innerHTML = cart.map(item => {
+        const itemTotal = item.price * item.count;
+        total += itemTotal;
+        return `
+          <tr>
+            <td>
+              <div class="fw-semibold">${item.name}</div>
+              <div class="text-muted small">${item.article}</div>
+            </td>
+            <td>${item.price.toFixed(2)} грн</td>
+            <td class="text-center">
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-secondary" onclick="changeCartCount(${item.product_id}, -1)">-</button>
+                <span class="btn btn-light disabled px-3 fw-bold">${item.count}</span>
+                <button class="btn btn-outline-secondary" onclick="changeCartCount(${item.product_id}, 1)">+</button>
+              </div>
+            </td>
+            <td class="text-end fw-bold">${itemTotal.toFixed(2)} грн</td>
+            <td class="text-end">
+              <button class="btn btn-sm text-danger" onclick="removeFromCart(${item.product_id})">
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      totalSumEl.textContent = `${total.toLocaleString('uk-UA', { minimumFractionDigits: 2 })} грн`;
+    }
+
+    function changeCartCount(productId, delta) {
+      const item = cart.find(i => i.product_id === productId);
+      if (!item) return;
+
+      if (delta > 0 && item.count >= item.maxStock) {
+        alert('Досягнуто максимальну кількість товару на складі');
+        return;
+      }
+
+      item.count += delta;
+      if (item.count <= 0) {
+        cart = cart.filter(i => i.product_id !== productId);
+      }
+      updateCartBadge();
+      renderCartModal();
+    }
+
+    function removeFromCart(productId) {
+      cart = cart.filter(i => i.product_id !== productId);
+      updateCartBadge();
+      renderCartModal();
+    }
+
+    function checkoutOrder() {
+      const totalCount = cart.reduce((sum, item) => sum + item.count, 0);
+      alert(`Дякуємо за замовлення! Оформлено ${totalCount} товарів.\nМенеджер зв'яжеться з вами для уточнення доставки.`);
+      cart = [];
+      updateCartBadge();
+      cartModalInstance.hide();
+    }
+
+    /* АВТОРИЗАЦІЯ ТА РОЛІ */
     function showLoginModal() {
       document.getElementById('loginError').classList.add('d-none');
       loginModalInstance.show();
@@ -392,7 +666,7 @@
       document.getElementById('thQuantity').textContent = 'КІЛЬКІСТЬ НА СКЛАДІ';
       document.getElementById('modeNotice').textContent = 'Режим: Адміністрування складу (Оператор)';
 
-      renderTable(allProducts);
+      filterData();
     }
 
     function logout() {
@@ -407,11 +681,94 @@
       document.getElementById('thQuantity').textContent = 'НАЯВНІСТЬ';
       document.getElementById('modeNotice').textContent = 'Режим: Клієнтський перегляд';
 
-      renderTable(allProducts);
+      filterData();
     }
 
+    /* CRUD ОПЕРАЦІЇ */
     function openAddModal() {
-      alert('Форма додавання нового товару в базу даних');
+      document.getElementById('addProductForm').reset();
+      addProductModalInstance.show();
+    }
+
+    async function submitNewProduct() {
+      const article = document.getElementById('addArticle').value.trim();
+      const name = document.getElementById('addName').value.trim();
+      const category_id = document.getElementById('addCategory').value;
+      const price = parseFloat(document.getElementById('addPrice').value);
+      const stock_quantity = parseInt(document.getElementById('addStock').value, 10);
+      const description = document.getElementById('addDescription').value.trim();
+
+      if (!article || !name || isNaN(price) || isNaN(stock_quantity)) {
+        alert('Будь ласка, заповніть усі обовʼязкові поля!');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ article, name, category_id, price, stock_quantity, description })
+        });
+
+        if (res.ok) {
+          addProductModalInstance.hide();
+          await fetchProducts();
+        } else {
+          alert('Помилка при збереженні товару');
+        }
+      } catch (err) {
+        alert('Помилка сервера при спробі збереження');
+      }
+    }
+
+    function openEditModal(productId) {
+      const product = allProducts.find(p => p.product_id === productId);
+      if (!product) return;
+
+      document.getElementById('editProductId').value = product.product_id;
+      document.getElementById('editProductName').value = `${product.article} — ${product.name}`;
+      document.getElementById('editProductPrice').value = product.price;
+      document.getElementById('editProductStock').value = product.stock_quantity;
+
+      editProductModalInstance.show();
+    }
+
+    async function saveProductEdit() {
+      const id = document.getElementById('editProductId').value;
+      const price = parseFloat(document.getElementById('editProductPrice').value);
+      const stock_quantity = parseInt(document.getElementById('editProductStock').value, 10);
+
+      try {
+        const res = await fetch(`/api/products/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ price, stock_quantity })
+        });
+
+        if (res.ok) {
+          editProductModalInstance.hide();
+          await fetchProducts();
+        } else {
+          alert('Не вдалося зберегти зміни');
+        }
+      } catch (e) {
+        alert('Помилка оновлення');
+      }
+    }
+
+    async function deleteProduct(productId, productName) {
+      if (!confirm(`Ви дійсно бажаєте списати/видалити товар «${productName}»?`)) return;
+
+      try {
+        const res = await fetch(`/api/products/${productId}`, { method: 'DELETE' });
+        if (res.ok) {
+          await fetchProducts();
+        } else {
+          alert('Помилка при видаленні товару');
+        }
+      } catch (e) {
+        alert('Помилка видалення товару');
+      }
     }
   </script>
 </body>

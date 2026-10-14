@@ -48,6 +48,60 @@ app.post('/api/login', async (req, res) => {
     res.status(500).json({ error: 'Помилка сервера' });
   }
 });
+// Отримання списку категорій
+app.get('/api/categories', async (req, res) => {
+  try {
+    const result = await db.query('SELECT * FROM categories ORDER BY category_id ASC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Помилка отримання категорій:', err);
+    res.status(500).json({ error: 'Помилка сервера' });
+  }
+});
+
+// Додавання нового товару (POST)
+app.post('/api/products', async (req, res) => {
+  const { category_id, article, name, price, stock_quantity, description } = req.body;
+  try {
+    const result = await db.query(
+      `INSERT INTO products (category_id, article, name, price, stock_quantity, description)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [category_id, article, name, price, stock_quantity, description]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error('Помилка додавання товару:', err);
+    res.status(500).json({ error: 'Не вдалося додати товар' });
+  }
+});
+
+// Оновлення товару (ціна та кількість) (PUT)
+app.put('/api/products/:id', async (req, res) => {
+  const { id } = req.params;
+  const { price, stock_quantity } = req.body;
+  try {
+    const result = await db.query(
+      `UPDATE products SET price = $1, stock_quantity = $2 WHERE product_id = $3 RETURNING *`,
+      [price, stock_quantity, id]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Помилка оновлення товару:', err);
+    res.status(500).json({ error: 'Не вдалося оновити товар' });
+  }
+});
+
+// Видалення товару (DELETE)
+app.delete('/api/products/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.query('DELETE FROM products WHERE product_id = $1', [id]);
+    res.json({ success: true, message: 'Товар успішно видалено' });
+  } catch (err) {
+    console.error('Помилка видалення товару:', err);
+    res.status(500).json({ error: 'Не вдалося видалити товар' });
+  }
+});
 app.listen(PORT, () => {
   console.log(`Сервер запущено: http://localhost:${PORT}`);
 });
