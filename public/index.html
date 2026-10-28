@@ -132,6 +132,13 @@
       font-size: 0.75rem;
       vertical-align: middle;
     }
+    .order-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      background: #fafbfc;
+      margin-bottom: 1rem;
+      padding: 1rem;
+    }
   </style>
 </head>
 <body>
@@ -147,23 +154,26 @@
 
     <!-- Блок профілю користувача / гостя -->
     <div class="d-flex align-items-center gap-3">
-      <!-- Клієнтська зона -->
+      <!-- Зона для неавторизованого відвідувача -->
       <div id="guestProfileBlock" class="d-flex align-items-center gap-2">
         <button class="btn btn-warning btn-sm fw-semibold position-relative me-2" onclick="openCartModal()">
           <i class="bi bi-cart3 me-1"></i>Кошик
           <span id="cartCountBadge" class="badge bg-danger rounded-pill cart-badge ms-1">0</span>
         </button>
-        <span class="badge bg-light text-dark px-3 py-2 rounded-pill">Режим: Клієнт</span>
-        <button class="btn btn-outline-warning btn-sm" onclick="showLoginModal()">
-          <i class="bi bi-box-arrow-in-right me-1"></i>Кабінет працівника
+        <button class="btn btn-outline-light btn-sm" onclick="showLoginModal()">
+          <i class="bi bi-box-arrow-in-right me-1"></i>Увійти
         </button>
       </div>
 
-      <!-- Зона оператора -->
+      <!-- Зона для авторизованого користувача -->
       <div id="operatorProfileBlock" class="d-none align-items-center gap-2">
-        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">Склад / Оператор</span>
-        <span class="small fw-semibold ms-2" id="userNameLabel">Влада Гунченко</span>
-        <div class="user-avatar-circle" id="userAvatarLabel">ВГ</div>
+        <button id="cartBtnAuthorized" class="btn btn-warning btn-sm fw-semibold position-relative me-2" onclick="openCartModal()">
+          <i class="bi bi-cart3 me-1"></i>Кошик
+          <span id="cartCountBadgeAuth" class="badge bg-danger rounded-pill cart-badge ms-1">0</span>
+        </button>
+        <span id="userRoleBadge" class="badge bg-warning text-dark px-3 py-2 rounded-pill">Користувач</span>
+        <span class="small fw-semibold ms-2" id="userNameLabel">Користувач</span>
+        <div class="user-avatar-circle" id="userAvatarLabel">U</div>
         <button class="btn btn-outline-light btn-sm ms-2" onclick="logout()" title="Вийти">
           <i class="bi bi-box-arrow-right"></i>
         </button>
@@ -178,7 +188,10 @@
         <h2 class="fw-bold mb-1" id="sectionHeading">Каталог продукції</h2>
         <div class="text-secondary small" id="sectionSubHeading">Перегляд цін, наявності та оформлення замовлення</div>
       </div>
-      <div id="adminActionButtons" class="d-none">
+      <div id="adminActionButtons" class="d-none gap-2">
+        <button class="btn btn-outline-primary px-3 py-2 fw-semibold d-flex align-items-center gap-2" style="border-radius: 10px;" onclick="openOrdersModal()">
+          <i class="bi bi-box-seam"></i> Замовлення клієнтів
+        </button>
         <button class="btn btn-primary px-3 py-2 fw-semibold d-flex align-items-center gap-2" style="border-radius: 10px;" onclick="openAddModal()">
           <i class="bi bi-plus-lg"></i> Додати товар
         </button>
@@ -272,23 +285,43 @@
     </div>
   </div>
 
-  <!-- Модальне вікно входу для працівника -->
+  <!-- Модальне вікно ЗАМОВЛЕНЬ ДЛЯ ОПЕРАТОРА -->
+  <div class="modal fade" id="ordersModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content" style="border-radius: 14px;">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold"><i class="bi bi-box-seam text-primary me-2"></i>Замовлення клієнтів (Склад)</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="ordersListContainer">
+            <div class="text-center py-4 text-muted">Завантаження замовлень...</div>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрити</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальне вікно входу -->
   <div class="modal fade" id="loginModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content" style="border-radius: 14px;">
         <div class="modal-header border-0 pb-0">
-          <h5 class="modal-title fw-bold">Вхід у кабінет оператора</h5>
+          <h5 class="modal-title fw-bold">Вхід у систему</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <p class="text-muted small">Введіть облікові дані співробітника складу для доступу до управління товарами.</p>
+          <p class="text-muted small">Введіть облікові дані для авторизації в системі.</p>
           <div class="mb-3">
             <label class="form-label small fw-semibold">Логін</label>
-            <input type="text" id="loginUsername" class="form-control" value="operator1">
+            <input type="text" id="loginUsername" class="form-control" placeholder="Введіть логін" autocomplete="off">
           </div>
           <div class="mb-3">
             <label class="form-label small fw-semibold">Пароль</label>
-            <input type="password" id="loginPassword" class="form-control" value="admin123">
+            <input type="password" id="loginPassword" class="form-control" placeholder="Введіть пароль" autocomplete="off">
           </div>
           <div id="loginError" class="alert alert-danger d-none py-2 small"></div>
         </div>
@@ -300,7 +333,7 @@
     </div>
   </div>
 
-  <!-- Модальне вікно додавання товару оператором -->
+  <!-- Модальне вікно додавання товару -->
   <div class="modal fade" id="addProductModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content" style="border-radius: 14px;">
@@ -385,19 +418,28 @@
     let categoriesList = [];
     let selectedCategory = 'ALL';
     let currentUser = null;
-    let cart = []; // Кошик покупця
+    let authToken = sessionStorage.getItem('token') || null;
+    let cart = [];
 
     let loginModalInstance = null;
     let addProductModalInstance = null;
     let editProductModalInstance = null;
     let cartModalInstance = null;
+    let ordersModalInstance = null;
 
     document.addEventListener('DOMContentLoaded', () => {
       loginModalInstance = new bootstrap.Modal(document.getElementById('loginModal'));
       addProductModalInstance = new bootstrap.Modal(document.getElementById('addProductModal'));
       editProductModalInstance = new bootstrap.Modal(document.getElementById('editProductModal'));
       cartModalInstance = new bootstrap.Modal(document.getElementById('cartModal'));
+      ordersModalInstance = new bootstrap.Modal(document.getElementById('ordersModal'));
       
+      const savedUser = sessionStorage.getItem('user');
+      if (savedUser && authToken) {
+        currentUser = JSON.parse(savedUser);
+        applyUserMode();
+      }
+
       loadCategories();
       fetchProducts();
     });
@@ -434,7 +476,7 @@
         return;
       }
 
-      const isStaff = currentUser !== null;
+      const isStaff = currentUser !== null && (currentUser.role === 'operator' || currentUser.role === 'admin');
 
       tbody.innerHTML = items.map(p => {
         const idFormatted = String(p.product_id).padStart(6, '0');
@@ -503,7 +545,7 @@
       filterData();
     }
 
-    /* ЛОГІКА КОШИКА ПОКУПЦЯ */
+    /* КОШИК ПОКУПЦЯ ТА РЕАЛЬНЕ ОФОРМЛЕННЯ ЗАМОВЛЕННЯ */
     function addToCart(productId) {
       const product = allProducts.find(p => p.product_id === productId);
       if (!product) return;
@@ -532,6 +574,8 @@
     function updateCartBadge() {
       const totalCount = cart.reduce((sum, item) => sum + item.count, 0);
       document.getElementById('cartCountBadge').textContent = totalCount;
+      const authBadge = document.getElementById('cartCountBadgeAuth');
+      if (authBadge) authBadge.textContent = totalCount;
     }
 
     function openCartModal() {
@@ -611,16 +655,120 @@
       renderCartModal();
     }
 
-    function checkoutOrder() {
-      const totalCount = cart.reduce((sum, item) => sum + item.count, 0);
-      alert(`Дякуємо за замовлення! Оформлено ${totalCount} товарів.\nМенеджер зв'яжеться з вами для уточнення доставки.`);
-      cart = [];
-      updateCartBadge();
-      cartModalInstance.hide();
+    async function checkoutOrder() {
+      const customerName = currentUser ? currentUser.full_name : 'Роздрібний покупець (Гість)';
+      const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.count), 0);
+
+      try {
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customer_name: customerName,
+            items: cart,
+            total_amount: totalAmount
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          alert(`Замовлення #${data.order_id} успішно передано на склад оператору!\nСума: ${totalAmount.toFixed(2)} грн`);
+          cart = [];
+          updateCartBadge();
+          cartModalInstance.hide();
+          await fetchProducts(); // Оновлюємо таблицю, бо залишки списалися!
+        } else {
+          alert('Не вдалося оформити замовлення');
+        }
+      } catch (err) {
+        alert('Помилка сервера при оформленні замовлення');
+      }
     }
 
-    /* АВТОРИЗАЦІЯ ТА РОЛІ */
+    /* МОДАЛЬНЕ ВІКНО ЗАМОВЛЕНЬ ОПЕРАТОРА */
+    async function openOrdersModal() {
+      ordersModalInstance.show();
+      const container = document.getElementById('ordersListContainer');
+      container.innerHTML = `<div class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Завантаження...</div>`;
+
+      try {
+        const res = await fetch('/api/orders', {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        const orders = await res.json();
+
+        if (orders.length === 0) {
+          container.innerHTML = `<div class="text-center py-4 text-muted">Замовлень поки що немає</div>`;
+          return;
+        }
+
+        container.innerHTML = orders.map(o => {
+          const isNew = o.status === 'Нове';
+          const itemsListHtml = o.items.map(it => `
+            <li class="small d-flex justify-content-between">
+              <span>${it.name} <strong>x${it.count}</strong></span>
+              <span>${(it.price * it.count).toFixed(2)} грн</span>
+            </li>
+          `).join('');
+
+          return `
+            <div class="order-card">
+              <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                <div>
+                  <span class="fw-bold fs-6">Замовлення #${o.order_id}</span>
+                  <span class="text-muted small ms-2"><i class="bi bi-clock me-1"></i>${o.date}</span>
+                </div>
+                <div>
+                  <span class="badge ${isNew ? 'bg-danger' : 'bg-success'} rounded-pill px-3 py-2">${o.status}</span>
+                </div>
+              </div>
+              <div class="mb-2">
+                <span class="text-secondary small">Клієнт:</span> <strong>${o.customer_name}</strong>
+              </div>
+              <ul class="list-unstyled mb-2 bg-white p-2 rounded border">
+                ${itemsListHtml}
+              </ul>
+              <div class="d-flex justify-content-between align-items-center pt-2">
+                <div class="fw-bold text-primary">Сума: ${Number(o.total_amount).toFixed(2)} грн</div>
+                ${isNew ? `
+                  <button class="btn btn-sm btn-outline-success" onclick="updateOrderStatus(${o.order_id}, 'Виконано')">
+                    <i class="bi bi-check2-circle me-1"></i>Виконати замовлення
+                  </button>
+                ` : '<span class="text-muted small"><i class="bi bi-check-all text-success"></i> Оброблено</span>'}
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        container.innerHTML = `<div class="text-center text-danger py-4">Не вдалося завантажити замовлення</div>`;
+      }
+    }
+
+    async function updateOrderStatus(orderId, status) {
+      try {
+        const res = await fetch(`/api/orders/${orderId}/status`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({ status })
+        });
+
+        if (res.ok) {
+          openOrdersModal();
+        } else {
+          alert('Помилка оновлення статусу');
+        }
+      } catch (err) {
+        alert('Помилка сервера');
+      }
+    }
+
+    /* АВТОРИЗАЦІЯ ТА РОЛІ (JWT) */
     function showLoginModal() {
+      document.getElementById('loginUsername').value = '';
+      document.getElementById('loginPassword').value = '';
       document.getElementById('loginError').classList.add('d-none');
       loginModalInstance.show();
     }
@@ -630,6 +778,12 @@
       const password = document.getElementById('loginPassword').value.trim();
       const errBox = document.getElementById('loginError');
 
+      if (!username || !password) {
+        errBox.textContent = 'Введіть логін та пароль';
+        errBox.classList.remove('d-none');
+        return;
+      }
+
       try {
         const res = await fetch('/api/login', {
           method: 'POST',
@@ -638,12 +792,17 @@
         });
 
         const data = await res.json();
-        if (data.success) {
+        if (data.success && data.token) {
           currentUser = data.user;
+          authToken = data.token;
+          
+          sessionStorage.setItem('token', authToken);
+          sessionStorage.setItem('user', JSON.stringify(currentUser));
+
           loginModalInstance.hide();
           applyUserMode();
         } else {
-          errBox.textContent = data.message || 'Невірні дані';
+          errBox.textContent = data.message || 'Невірний логін або пароль';
           errBox.classList.remove('d-none');
         }
       } catch (e) {
@@ -659,23 +818,50 @@
 
       document.getElementById('userNameLabel').textContent = currentUser.full_name;
       document.getElementById('userAvatarLabel').textContent = currentUser.full_name.split(' ').map(n => n[0]).join('');
-      
-      document.getElementById('adminActionButtons').classList.remove('d-none');
-      document.getElementById('sectionHeading').textContent = 'Товар';
-      document.getElementById('sectionSubHeading').textContent = 'Управління товарами, залишками та цінами на складі';
-      document.getElementById('thQuantity').textContent = 'КІЛЬКІСТЬ НА СКЛАДІ';
-      document.getElementById('modeNotice').textContent = 'Режим: Адміністрування складу (Оператор)';
+
+      const isStaff = currentUser.role === 'operator' || currentUser.role === 'admin';
+      const roleBadge = document.getElementById('userRoleBadge');
+      const cartBtnAuth = document.getElementById('cartBtnAuthorized');
+
+      if (isStaff) {
+        // Режим оператора складу
+        roleBadge.className = 'badge bg-warning text-dark px-3 py-2 rounded-pill';
+        roleBadge.textContent = 'Склад / Оператор';
+        cartBtnAuth.classList.add('d-none');
+        document.getElementById('adminActionButtons').classList.remove('d-none');
+        document.getElementById('adminActionButtons').classList.add('d-flex');
+        document.getElementById('sectionHeading').textContent = 'Товарна номенклатура';
+        document.getElementById('sectionSubHeading').textContent = 'Управління залишками, оновлення цін та списання';
+        document.getElementById('thQuantity').textContent = 'КІЛЬКІСТЬ НА СКЛАДІ';
+        document.getElementById('modeNotice').textContent = 'Режим: Адміністрування складу (Оператор)';
+      } else {
+        // Режим зареєстрованого клієнта
+        roleBadge.className = 'badge bg-info text-dark px-3 py-2 rounded-pill';
+        roleBadge.textContent = 'Покупець';
+        cartBtnAuth.classList.remove('d-none');
+        document.getElementById('adminActionButtons').classList.add('d-none');
+        document.getElementById('adminActionButtons').classList.remove('d-flex');
+        document.getElementById('sectionHeading').textContent = 'Каталог продукції';
+        document.getElementById('sectionSubHeading').textContent = 'Перегляд цін, наявності та оформлення замовлення';
+        document.getElementById('thQuantity').textContent = 'НАЯВНІСТЬ';
+        document.getElementById('modeNotice').textContent = 'Режим: Авторизований покупець';
+      }
 
       filterData();
     }
 
     function logout() {
       currentUser = null;
+      authToken = null;
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('user');
+
       document.getElementById('guestProfileBlock').classList.remove('d-none');
       document.getElementById('operatorProfileBlock').classList.add('d-none');
       document.getElementById('operatorProfileBlock').classList.remove('d-flex');
 
       document.getElementById('adminActionButtons').classList.add('d-none');
+      document.getElementById('adminActionButtons').classList.remove('d-flex');
       document.getElementById('sectionHeading').textContent = 'Каталог продукції';
       document.getElementById('sectionSubHeading').textContent = 'Перегляд цін, наявності та оформлення замовлення';
       document.getElementById('thQuantity').textContent = 'НАЯВНІСТЬ';
@@ -706,13 +892,19 @@
       try {
         const res = await fetch('/api/products', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
           body: JSON.stringify({ article, name, category_id, price, stock_quantity, description })
         });
 
         if (res.ok) {
           addProductModalInstance.hide();
           await fetchProducts();
+        } else if (res.status === 401 || res.status === 403) {
+          alert('Помилка доступу: недостатньо прав або сесія застаріла. Авторизуйтесь знову.');
+          logout();
         } else {
           alert('Помилка при збереженні товару');
         }
@@ -741,13 +933,19 @@
       try {
         const res = await fetch(`/api/products/${id}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
           body: JSON.stringify({ price, stock_quantity })
         });
 
         if (res.ok) {
           editProductModalInstance.hide();
           await fetchProducts();
+        } else if (res.status === 401 || res.status === 403) {
+          alert('Помилка доступу: дія дозволена лише оператору складу.');
+          logout();
         } else {
           alert('Не вдалося зберегти зміни');
         }
@@ -760,9 +958,18 @@
       if (!confirm(`Ви дійсно бажаєте списати/видалити товар «${productName}»?`)) return;
 
       try {
-        const res = await fetch(`/api/products/${productId}`, { method: 'DELETE' });
+        const res = await fetch(`/api/products/${productId}`, { 
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        });
+
         if (res.ok) {
           await fetchProducts();
+        } else if (res.status === 401 || res.status === 403) {
+          alert('Помилка доступу: неавторизоване списання заборонено.');
+          logout();
         } else {
           alert('Помилка при видаленні товару');
         }

@@ -49,3 +49,6 @@ INSERT INTO products (article, name, category_id, price, stock_quantity, descrip
 ('MN7907-4', 'Mannol Energy Combi LL 5W-30 4л', 1, 1199.60, 28, 'Синтетична олива для сучасних двигунів VAG/BMW/MB, API SN, ACEA C3'),
 ('MN7907-5', 'Mannol Energy Combi LL 5W-30 5л', 1, 1842.00, 12, 'Синтетична олива зі збільшеним інтервалом заміни (Longlife), API SN, ACEA C3')
 ON CONFLICT (article) DO NOTHING;
+INSERT INTO users (username, password_hash, full_name, role)
+VALUES ('client1', 'user123', 'Влада Гунченко ', 'client')
+ON CONFLICT (username) DO NOTHING;
